@@ -1,6 +1,15 @@
 StatsD Metric Types
 ==================
 
+Names
+-----
+
+Metric names are sanitized to alphanumeric:
+
+1. consecutive whitespace is replaced with `_`
+2. `/` is replaced with `-`
+3. anything that is not alpha-numeric, `_`, `-`, or `.` is removed
+
 
 Counting
 --------
@@ -19,6 +28,11 @@ backend).  Statsd will send both the rate as well as the count at each flush.
 
 Tells StatsD that this counter is being sent sampled every 1/10th of the time.
 
+Counter values can be positive or negative.
+
+Every received counter value is multipled by 1/rate before adding to the
+accumulator to account for the un-sampled values.
+
 Timing
 ------
 
@@ -28,6 +42,10 @@ The glork took 320ms to complete this time. StatsD figures out percentiles,
 average (mean), standard deviation, sum, lower and upper bounds for the flush interval.
 The percentile threshold can be tweaked with `config.percentThreshold`.
 
+  XXX Also, count and `count_ps` (per second), of timers received. If there is a
+  sample rate, the count is magnified by 1/rate to account for missing values.
+  Sample rate is unused (and not useable) for any other purpose, for timers.
+
 The percentile threshold can be a single value, or a list of values, and will
 generate the following list of stats for each threshold:
 
@@ -35,8 +53,16 @@ generate the following list of stats for each threshold:
     stats.timers.$KEY.upper_$PCT
     stats.timers.$KEY.sum_$PCT
 
+    XXX error, this is .timer_data. not .timers.?
+    XXX PCT is in range 0 to 100, and if it is 90.5, will be 90_5
+    XXX default is 90?
+
 Where `$KEY` is the stats key you specify when sending to statsd, and `$PCT` is
-the percentile threshold.
+the percentile threshold. In calculating the stats for a threshold, only values
+in that percentile are considered.
+
+The default is 90, and the intention is ignore the most extreme variations in
+timing in order to characterize typical values without distortion.
 
 Note that the `mean` metric is the mean value of all timings recorded during
 the flush interval whereas `mean_$PCT` is the mean of all timings which fell
@@ -77,6 +103,7 @@ i.e. class intervals of different sizes.
 
 Gauges
 ------
+
 StatsD now also supports gauges, arbitrary values, which can be recorded.
 
     gaugor:333|g
