@@ -20,7 +20,7 @@ var timers = {};
 var timer_counters = {};
 var gauges = {};
 var sets = {};
-var counter_rates = {};
+var counter_rates = {}; // XXX dead code, never used
 var timer_data = {};
 var pctThreshold = null;
 var flushInterval, keyFlushInt, serverLoaded, mgmtServer;
@@ -81,7 +81,7 @@ function flushMetrics() {
     timers: timers,
     timer_counters: timer_counters,
     sets: sets,
-    counter_rates: counter_rates,
+    counter_rates: counter_rates, // XXX dead code, never used
     timer_data: timer_data,
     pctThreshold: pctThreshold,
     histogram: conf.histogram
@@ -192,8 +192,11 @@ config.configFile(process.argv[2], function (config) {
     // The default server is UDP
     var server = config.server || './servers/udp'
     serverLoaded = startServer(config, server, function (msg, rinfo) {
+      // msg: statsd multi-line, rinfo: remote addr info
       backendEvents.emit('packet', msg, rinfo);
       counters[packets_received]++;
+
+      // break into lines
       var packet_data = msg.toString();
       if (packet_data.indexOf("\n") > -1) {
         var metrics = packet_data.split("\n");
@@ -202,10 +205,15 @@ config.configFile(process.argv[2], function (config) {
       }
 
       for (var midx in metrics) {
+        // ignore empty
         if (metrics[midx].length === 0) {
           continue;
         }
 
+        // XXX probably incrementing in the wrong place... its counting the
+        // number of times a metric name has been seen, but if there are
+        // multiple metric values per name/line, its probably the value that is
+        // more interesting to count.
         counters[metrics_received]++;
         if (config.dumpMessages) {
           l.log(metrics[midx].toString());
@@ -224,11 +232,13 @@ config.configFile(process.argv[2], function (config) {
         }
 
         if (bits.length === 0) {
+          // XXX this default value would fail the is_valid_packet test
           bits.push("1");
         }
 
+        // XXX Secret feature? Multiple values are allowed per line
         for (var i = 0; i < bits.length; i++) {
-          var sampleRate = 1;
+          var sampleRate = 1; // default rate
           var fields = bits[i].split("|");
           if (!helpers.is_valid_packet(fields)) {
               l.log('Bad line: ' + fields + ' in msg "' + metrics[midx] +'"');
@@ -238,8 +248,12 @@ config.configFile(process.argv[2], function (config) {
           }
           if (fields[2]) {
             sampleRate = Number(fields[2].match(/^@([\d\.]+)/)[1]);
+            // XXX not enforced by helper to be >0 and <=1, so it should be
+            // set to 1 here if its invalid
           }
 
+          // XXX type is trimmed here, but not in lib/helpers, so whitespace on
+          // the type will evade validation
           var metric_type = fields[1].trim();
           if (metric_type === "ms") {
             if (! timers[key]) {
