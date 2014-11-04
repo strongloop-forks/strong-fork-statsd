@@ -41,12 +41,17 @@ Optional Variables:
   flush_counts:     send stats_counts metrics [default: true]
 
   keyFlush:         log the most frequently sent keys [object, default: undefined]
-    interval:       how often to log frequent keys [ms, default: 0]
+    interval:       how often to log frequent keys [ms, default: 0, means 'do not flush']
     percent:        percentage of frequent keys to log [%, default: 100]
     log:            location of log file for frequent keys [default: STDOUT]
-  deleteIdleStats:  don't send values to graphite for inactive counters, sets, gauges, or timers
-                    as opposed to sending 0.  For gauges, this unsets the gauge (instead of sending
-                    the previous value). Can be individually overriden. [default: false]
+  deleteIdleStats:  Normally, stats are reset after being reported, counters are set to
+                    0, timers and sets are cleared, and gauges are left at their
+                    last value. Because they are only reset, they will continue
+                    to get reported, even if they are never received again. If
+                    this is set to true, then the stats will instead be deleted
+                    after being reported, so they won't be reported again until
+                    they have been received.  Can be individually overriden.
+                    [default: false]
   deleteGauges:     don't send values to graphite for inactive gauges, as opposed to sending the previous value [default: false]
   deleteTimers:     don't send values to graphite for inactive timers, as opposed to sending 0 [default: false]
   deleteSets:       don't send values to graphite for inactive sets, as opposed to sending 0 [default: false]
