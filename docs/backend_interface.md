@@ -48,6 +48,14 @@ metrics: {
   structures. StatsD will reset timers and counters after each
   listener has handled the event.
 
+  Internal metrics are:
+
+  - counter: `statsd.bad_lines_seen`: invalid lines seen during protocol decode
+  - counter: `statsd.metrics_received`, number of times a metric name is received
+  - counter: `statsd.packets_received`, number of times statsd packet is received
+  - gauge: `statsd.timestamp_lag`, difference between actual flush interval, and
+    config.flushInterval, pos if longer, neg if shorter.
+
 * Event: **'status'**
 
   Parameters: `(writeCb)`
