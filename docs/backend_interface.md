@@ -41,8 +41,8 @@ metrics: {
 }
   ```
 
-  The counter_rates and timer_data are precalculated statistics to simplify
-  the creation of backends, the statsd_metrics hash contains metrics generated
+  The `counter_rates` and `timer_data` are precalculated statistics to simplify
+  the creation of backends, the `statsd_metrics` hash contains metrics generated
   by statsd itself. Each backend module is passed the same set of
   statistics, so a backend module should treat the metrics as immutable
   structures. StatsD will reset timers and counters after each
